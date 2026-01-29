@@ -18,7 +18,6 @@ interface CustomSelectProps {
 
 const CustomSelect = ({ value, onChange, options, placeholder, openUpward = false }: CustomSelectProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [dropdownRef, setDropdownRef] = useState<HTMLDivElement | null>(null);
   const selectedOption = options.find(opt => opt.value === value);
 
   // 모바일 여부 체크 (768px 기준)
@@ -83,7 +82,6 @@ const CustomSelect = ({ value, onChange, options, placeholder, openUpward = fals
           />
           {/* 옵션 리스트 */}
           <div
-            ref={setDropdownRef}
             style={isMobile ? {
               // 모바일: 화면 하단에 액션시트 형태로 표시
               position: 'fixed',
@@ -525,9 +523,9 @@ export const SearchFilter = ({ alwaysOpen = false, bottomSheet = false }: Search
         ...(alwaysOpen ? { width: '100%' } : {
           boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
           position: 'fixed' as const,
-          top: '80px',
+          top: '130px',
           right: '16px',
-          zIndex: 600,
+          zIndex: 650,
           width: '320px',
           border: '1px solid #e5e7eb',
         }),

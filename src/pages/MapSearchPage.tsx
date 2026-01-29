@@ -109,14 +109,16 @@ export const MapSearchPage = () => {
           onSelectMansion={handleSelectMansion}
         />
 
-        {/* 우측 상단: 검색 결과 수 + 필터 (데스크탑) */}
-        <div className="hidden md:flex absolute top-4 right-4 z-[500] flex-row items-center gap-3">
-          <div className="bg-white shadow-lg rounded-lg px-4 py-3 border border-gray-200">
-            <span className="text-base text-gray-600">
-              検索結果: <span className="font-bold text-blue-600 text-lg">{data?.total || 0}</span>件
-            </span>
+        {/* 우측 상단: 검색 결과 수 (데스크탑) - 항상 위에 표시 */}
+        <div className="hidden md:block absolute top-4 right-4 z-[700]">
+          <div className="flex flex-row items-center gap-3">
+            <div className="bg-white shadow-lg rounded-lg px-4 py-3 border border-gray-200">
+              <span className="text-base text-gray-600">
+                検索結果: <span className="font-bold text-blue-600 text-lg">{data?.total || 0}</span>件
+              </span>
+            </div>
+            <SearchFilter />
           </div>
-          <SearchFilter />
         </div>
 
         {/* 우측 하단: 검색 결과 수 + 필터 (모바일) */}

@@ -58,4 +58,28 @@ export const fetchMansionsInBounds = async (
   return response.data.data;
 };
 
+// 크롤링 결과 타입
+export interface CrawlResult {
+  success: boolean;
+  message?: string;
+  stats?: {
+    crawled: number;
+    geocoded: number;
+    saved: number;
+    failed: number;
+  };
+  errors?: string[];
+  error?: string;
+}
+
+// 크롤링 실행 (수동 트리거)
+export const triggerCrawl = async (maxPages: number = 3): Promise<CrawlResult> => {
+  const response = await apiClient.post<CrawlResult>(
+    '/crawl',
+    { maxPages },
+    { timeout: 600000 } // 10분 타임아웃 (크롤링은 오래 걸림)
+  );
+  return response.data;
+};
+
 export { apiClient };

@@ -5,32 +5,54 @@ import { useSearchStore } from '../../store';
 import { MansionPopup } from '../mansion';
 import type { Mansion, MapBounds } from '../../types';
 
-// 커스텀 마커 아이콘
-const createMarkerIcon = (isSelected: boolean) => {
+// 커스텀 마커 아이콘 (복수 물건 개수 표시)
+const createMarkerIcon = (isSelected: boolean, count: number = 1) => {
+  const showBadge = count > 1;
   return L.divIcon({
     className: 'custom-marker',
     html: `
-      <div style="
-        width: 32px;
-        height: 32px;
-        background: ${isSelected ? '#2563eb' : '#3b82f6'};
-        border: 3px solid white;
-        border-radius: 50% 50% 50% 0;
-        transform: rotate(-45deg);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-      ">
+      <div style="position: relative;">
         <div style="
-          width: 100%;
-          height: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transform: rotate(45deg);
+          width: 32px;
+          height: 32px;
+          background: ${isSelected ? '#2563eb' : '#3b82f6'};
+          border: 3px solid white;
+          border-radius: 50% 50% 50% 0;
+          transform: rotate(-45deg);
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         ">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
-            <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-          </svg>
+          <div style="
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: rotate(45deg);
+          ">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
+              <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+            </svg>
+          </div>
         </div>
+        ${showBadge ? `
+          <div style="
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 20px;
+            height: 20px;
+            background: #ef4444;
+            border: 2px solid white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+          ">${count}</div>
+        ` : ''}
       </div>
     `,
     iconSize: [32, 32],
@@ -80,6 +102,7 @@ const FlyToLocation = ({ lat, lng }: FlyToLocationProps) => {
 
 interface MansionMapProps {
   mansions: Mansion[];
+  groupedMansions?: Map<string, Mansion[]>;
   selectedMansion?: Mansion | null;
   onSelectMansion?: (mansion: Mansion) => void;
   onLocateUser?: () => void;
@@ -156,7 +179,7 @@ const TOKYO_CENTER = {
   lng: 139.7671,
 };
 
-export const MansionMap = ({ mansions, selectedMansion, onSelectMansion }: MansionMapProps) => {
+export const MansionMap = ({ mansions, groupedMansions, selectedMansion, onSelectMansion }: MansionMapProps) => {
   const { setMapBounds, selectedMansionId, setSelectedMansion } = useSearchStore();
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
@@ -215,20 +238,43 @@ export const MansionMap = ({ mansions, selectedMansion, onSelectMansion }: Mansi
           </CircleMarker>
         )}
 
-        {mansions.map((mansion) => (
-          <Marker
-            key={mansion.id}
-            position={[mansion.latitude, mansion.longitude]}
-            icon={createMarkerIcon(selectedMansionId === mansion.id)}
-            eventHandlers={{
-              click: () => handleMarkerClick(mansion),
-            }}
-          >
-            <Popup>
-              <MansionPopup mansion={mansion} />
-            </Popup>
-          </Marker>
-        ))}
+        {/* 좌표별로 하나의 마커만 표시 (복수 물건은 배지로 개수 표시) */}
+        {groupedMansions ? (
+          Array.from(groupedMansions.entries()).map(([key, mansionsAtLocation]) => {
+            const firstMansion = mansionsAtLocation[0];
+            const count = mansionsAtLocation.length;
+            const isSelected = mansionsAtLocation.some(m => selectedMansionId === m.id);
+            return (
+              <Marker
+                key={key}
+                position={[firstMansion.latitude, firstMansion.longitude]}
+                icon={createMarkerIcon(isSelected, count)}
+                eventHandlers={{
+                  click: () => handleMarkerClick(firstMansion),
+                }}
+              >
+                <Popup>
+                  <MansionPopup mansion={firstMansion} count={count} />
+                </Popup>
+              </Marker>
+            );
+          })
+        ) : (
+          mansions.map((mansion) => (
+            <Marker
+              key={mansion.id}
+              position={[mansion.latitude, mansion.longitude]}
+              icon={createMarkerIcon(selectedMansionId === mansion.id)}
+              eventHandlers={{
+                click: () => handleMarkerClick(mansion),
+              }}
+            >
+              <Popup>
+                <MansionPopup mansion={mansion} />
+              </Popup>
+            </Marker>
+          ))
+        )}
       </MapContainer>
     </div>
   );

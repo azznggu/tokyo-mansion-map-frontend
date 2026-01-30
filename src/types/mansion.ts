@@ -57,6 +57,8 @@ export interface SearchFilter {
   walkMinutesMax?: number;
   ward?: string; // 도쿄 구
   completionYear?: number;
+  totalUnitsMin?: number; // 총호수 최소
+  totalUnitsMax?: number; // 총호수 최대
 }
 
 // 지도 영역 타입

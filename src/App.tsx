@@ -20,8 +20,8 @@ function App() {
           <Header />
           <main className="flex-1 overflow-hidden">
             <Routes>
-              <Route path="/" element={<MapSearchPage />} />
-              <Route path="/list" element={<ListPage />} />
+              <Route path="/" element={<ListPage />} />
+              <Route path="/map" element={<MapSearchPage />} />
             </Routes>
           </main>
         </div>

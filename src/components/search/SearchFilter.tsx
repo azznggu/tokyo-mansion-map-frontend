@@ -180,6 +180,8 @@ export const SearchFilter = ({ alwaysOpen = false, bottomSheet = false }: Search
   const [localWard, setLocalWard] = useState<string>(filter.ward || '');
   const [localLayoutTypes, setLocalLayoutTypes] = useState<string[]>(filter.layoutTypes || []);
   const [localWalkMinutesMax, setLocalWalkMinutesMax] = useState<string>(filter.walkMinutesMax?.toString() || '');
+  const [localTotalUnitsMin, setLocalTotalUnitsMin] = useState<string>(filter.totalUnitsMin?.toString() || '');
+  const [localTotalUnitsMax, setLocalTotalUnitsMax] = useState<string>(filter.totalUnitsMax?.toString() || '');
 
   // store의 filter가 변경되면 로컬 state도 동기화 (리셋 시)
   useEffect(() => {
@@ -190,6 +192,8 @@ export const SearchFilter = ({ alwaysOpen = false, bottomSheet = false }: Search
     setLocalWard(filter.ward || '');
     setLocalLayoutTypes(filter.layoutTypes || []);
     setLocalWalkMinutesMax(filter.walkMinutesMax?.toString() || '');
+    setLocalTotalUnitsMin(filter.totalUnitsMin?.toString() || '');
+    setLocalTotalUnitsMax(filter.totalUnitsMax?.toString() || '');
   }, [filter]);
 
   const showFilter = alwaysOpen || isFilterOpen;
@@ -207,6 +211,8 @@ export const SearchFilter = ({ alwaysOpen = false, bottomSheet = false }: Search
       ward: localWard || undefined,
       layoutTypes: localLayoutTypes.length > 0 ? localLayoutTypes : undefined,
       walkMinutesMax: localWalkMinutesMax ? Number(localWalkMinutesMax) : undefined,
+      totalUnitsMin: localTotalUnitsMin ? Number(localTotalUnitsMin) : undefined,
+      totalUnitsMax: localTotalUnitsMax ? Number(localTotalUnitsMax) : undefined,
     });
     setFilterOpen(false);
   };
@@ -220,6 +226,8 @@ export const SearchFilter = ({ alwaysOpen = false, bottomSheet = false }: Search
     setLocalWard('');
     setLocalLayoutTypes([]);
     setLocalWalkMinutesMax('');
+    setLocalTotalUnitsMin('');
+    setLocalTotalUnitsMax('');
     resetFilter();
   };
 
@@ -423,6 +431,44 @@ export const SearchFilter = ({ alwaysOpen = false, bottomSheet = false }: Search
           placeholder="指定なし"
           openUpward={true}
         />
+      </div>
+
+      {/* 총호수 범위 */}
+      <div style={{ marginBottom: sectionMarginBottom }}>
+        <label style={{ display: 'block', fontSize: '16px', fontWeight: 500, color: '#374151', marginBottom: labelMarginBottom }}>
+          総戸数（戸）
+        </label>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <input
+            type="number"
+            placeholder="下限"
+            value={localTotalUnitsMin}
+            onChange={(e) => setLocalTotalUnitsMin(e.target.value)}
+            style={{
+              ...inputStyle,
+              width: '100%',
+              padding: inputPadding,
+              border: '1px solid #d1d5db',
+              borderRadius: '8px',
+              outline: 'none',
+            }}
+          />
+          <span style={{ color: '#9ca3af', fontWeight: 500, fontSize: '18px' }}>~</span>
+          <input
+            type="number"
+            placeholder="上限"
+            value={localTotalUnitsMax}
+            onChange={(e) => setLocalTotalUnitsMax(e.target.value)}
+            style={{
+              ...inputStyle,
+              width: '100%',
+              padding: inputPadding,
+              border: '1px solid #d1d5db',
+              borderRadius: '8px',
+              outline: 'none',
+            }}
+          />
+        </div>
       </div>
 
       {/* 버튼 */}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchStore } from '../../store';
 import { TOKYO_WARDS, LAYOUT_TYPES } from '../../types';
 
@@ -172,10 +172,56 @@ const CustomSelect = ({ value, onChange, options, placeholder, openUpward = fals
 export const SearchFilter = ({ alwaysOpen = false, bottomSheet = false }: SearchFilterProps) => {
   const { filter, setFilter, resetFilter, isFilterOpen, setFilterOpen } = useSearchStore();
 
+  // 로컬 state로 입력 필드 관리 (検索する 버튼 클릭 시에만 반영)
+  const [localPriceMin, setLocalPriceMin] = useState<string>(filter.priceMin?.toString() || '');
+  const [localPriceMax, setLocalPriceMax] = useState<string>(filter.priceMax?.toString() || '');
+  const [localAreaMin, setLocalAreaMin] = useState<string>(filter.areaMin?.toString() || '');
+  const [localAreaMax, setLocalAreaMax] = useState<string>(filter.areaMax?.toString() || '');
+  const [localWard, setLocalWard] = useState<string>(filter.ward || '');
+  const [localLayoutTypes, setLocalLayoutTypes] = useState<string[]>(filter.layoutTypes || []);
+  const [localWalkMinutesMax, setLocalWalkMinutesMax] = useState<string>(filter.walkMinutesMax?.toString() || '');
+
+  // store의 filter가 변경되면 로컬 state도 동기화 (리셋 시)
+  useEffect(() => {
+    setLocalPriceMin(filter.priceMin?.toString() || '');
+    setLocalPriceMax(filter.priceMax?.toString() || '');
+    setLocalAreaMin(filter.areaMin?.toString() || '');
+    setLocalAreaMax(filter.areaMax?.toString() || '');
+    setLocalWard(filter.ward || '');
+    setLocalLayoutTypes(filter.layoutTypes || []);
+    setLocalWalkMinutesMax(filter.walkMinutesMax?.toString() || '');
+  }, [filter]);
+
   const showFilter = alwaysOpen || isFilterOpen;
 
   // 모바일 여부 체크 (768px 기준)
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
+  // 검색 실행 함수
+  const handleSearch = () => {
+    setFilter({
+      priceMin: localPriceMin ? Number(localPriceMin) : undefined,
+      priceMax: localPriceMax ? Number(localPriceMax) : undefined,
+      areaMin: localAreaMin ? Number(localAreaMin) : undefined,
+      areaMax: localAreaMax ? Number(localAreaMax) : undefined,
+      ward: localWard || undefined,
+      layoutTypes: localLayoutTypes.length > 0 ? localLayoutTypes : undefined,
+      walkMinutesMax: localWalkMinutesMax ? Number(localWalkMinutesMax) : undefined,
+    });
+    setFilterOpen(false);
+  };
+
+  // 리셋 함수
+  const handleReset = () => {
+    setLocalPriceMin('');
+    setLocalPriceMax('');
+    setLocalAreaMin('');
+    setLocalAreaMax('');
+    setLocalWard('');
+    setLocalLayoutTypes([]);
+    setLocalWalkMinutesMax('');
+    resetFilter();
+  };
 
   // 플로팅 버튼 (펼치기 전)
   if (!showFilter) {
@@ -231,8 +277,8 @@ export const SearchFilter = ({ alwaysOpen = false, bottomSheet = false }: Search
     { value: '20', label: '20分以内' },
   ];
 
-  // 필터 내용 컴포넌트
-  const FilterContent = () => (
+  // 필터 내용 (JSX 변수로 정의하여 리렌더링 시 포커스 유지)
+  const filterContent = (
     <>
       {/* 가격 범위 */}
       <div style={{ marginBottom: sectionMarginBottom }}>
@@ -243,8 +289,8 @@ export const SearchFilter = ({ alwaysOpen = false, bottomSheet = false }: Search
           <input
             type="number"
             placeholder="下限"
-            value={filter.priceMin || ''}
-            onChange={(e) => setFilter({ priceMin: e.target.value ? Number(e.target.value) : undefined })}
+            value={localPriceMin}
+            onChange={(e) => setLocalPriceMin(e.target.value)}
             style={{
               ...inputStyle,
               width: '100%',
@@ -258,8 +304,8 @@ export const SearchFilter = ({ alwaysOpen = false, bottomSheet = false }: Search
           <input
             type="number"
             placeholder="上限"
-            value={filter.priceMax || ''}
-            onChange={(e) => setFilter({ priceMax: e.target.value ? Number(e.target.value) : undefined })}
+            value={localPriceMax}
+            onChange={(e) => setLocalPriceMax(e.target.value)}
             style={{
               ...inputStyle,
               width: '100%',
@@ -281,8 +327,8 @@ export const SearchFilter = ({ alwaysOpen = false, bottomSheet = false }: Search
           <input
             type="number"
             placeholder="下限"
-            value={filter.areaMin || ''}
-            onChange={(e) => setFilter({ areaMin: e.target.value ? Number(e.target.value) : undefined })}
+            value={localAreaMin}
+            onChange={(e) => setLocalAreaMin(e.target.value)}
             style={{
               ...inputStyle,
               width: '100%',
@@ -296,8 +342,8 @@ export const SearchFilter = ({ alwaysOpen = false, bottomSheet = false }: Search
           <input
             type="number"
             placeholder="上限"
-            value={filter.areaMax || ''}
-            onChange={(e) => setFilter({ areaMax: e.target.value ? Number(e.target.value) : undefined })}
+            value={localAreaMax}
+            onChange={(e) => setLocalAreaMax(e.target.value)}
             style={{
               ...inputStyle,
               width: '100%',
@@ -316,8 +362,8 @@ export const SearchFilter = ({ alwaysOpen = false, bottomSheet = false }: Search
           エリア
         </label>
         <CustomSelect
-          value={filter.ward || ''}
-          onChange={(value) => setFilter({ ward: value || undefined })}
+          value={localWard}
+          onChange={(value) => setLocalWard(value)}
           options={wardOptions}
           placeholder="すべて"
         />
@@ -340,22 +386,21 @@ export const SearchFilter = ({ alwaysOpen = false, bottomSheet = false }: Search
                 fontSize: isMobile ? '14px' : '16px',
                 cursor: 'pointer',
                 borderRadius: '8px',
-                border: filter.layoutTypes?.includes(type) ? '2px solid #3b82f6' : '1px solid #e5e7eb',
-                backgroundColor: filter.layoutTypes?.includes(type) ? '#eff6ff' : 'white',
-                color: filter.layoutTypes?.includes(type) ? '#1d4ed8' : '#4b5563',
-                fontWeight: filter.layoutTypes?.includes(type) ? 600 : 400,
+                border: localLayoutTypes.includes(type) ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+                backgroundColor: localLayoutTypes.includes(type) ? '#eff6ff' : 'white',
+                color: localLayoutTypes.includes(type) ? '#1d4ed8' : '#4b5563',
+                fontWeight: localLayoutTypes.includes(type) ? 600 : 400,
                 transition: 'all 0.2s',
               }}
             >
               <input
                 type="checkbox"
-                checked={filter.layoutTypes?.includes(type) || false}
+                checked={localLayoutTypes.includes(type)}
                 onChange={(e) => {
-                  const current = filter.layoutTypes || [];
                   if (e.target.checked) {
-                    setFilter({ layoutTypes: [...current, type] });
+                    setLocalLayoutTypes([...localLayoutTypes, type]);
                   } else {
-                    setFilter({ layoutTypes: current.filter((t) => t !== type) });
+                    setLocalLayoutTypes(localLayoutTypes.filter((t) => t !== type));
                   }
                 }}
                 style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }}
@@ -372,8 +417,8 @@ export const SearchFilter = ({ alwaysOpen = false, bottomSheet = false }: Search
           駅徒歩（分）
         </label>
         <CustomSelect
-          value={filter.walkMinutesMax?.toString() || ''}
-          onChange={(value) => setFilter({ walkMinutesMax: value ? Number(value) : undefined })}
+          value={localWalkMinutesMax}
+          onChange={(value) => setLocalWalkMinutesMax(value)}
           options={walkMinutesOptions}
           placeholder="指定なし"
           openUpward={true}
@@ -389,7 +434,7 @@ export const SearchFilter = ({ alwaysOpen = false, bottomSheet = false }: Search
         marginTop: buttonAreaMarginTop
       }}>
         <button
-          onClick={resetFilter}
+          onClick={handleReset}
           style={{
             flex: 1,
             padding: isMobile ? '10px 12px' : '12px 16px',
@@ -405,7 +450,7 @@ export const SearchFilter = ({ alwaysOpen = false, bottomSheet = false }: Search
           リセット
         </button>
         <button
-          onClick={() => setFilterOpen(false)}
+          onClick={handleSearch}
           style={{
             flex: 1,
             padding: isMobile ? '10px 12px' : '12px 16px',
@@ -494,7 +539,7 @@ export const SearchFilter = ({ alwaysOpen = false, bottomSheet = false }: Search
             </div>
           </div>
           <div style={{ padding: isMobile ? '16px' : '20px' }}>
-            <FilterContent />
+            {filterContent}
           </div>
         </div>
         <style>{`
@@ -562,7 +607,7 @@ export const SearchFilter = ({ alwaysOpen = false, bottomSheet = false }: Search
           </button>
         )}
       </div>
-      <FilterContent />
+      {filterContent}
     </div>
   );
 };

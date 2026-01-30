@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { fetchMansions, fetchMansionById, fetchMansionsInBounds } from '../services/api';
 import { useSearchStore } from '../store';
 import type { MapBounds, SearchFilter } from '../types';
@@ -10,6 +10,24 @@ export const useMansions = (page: number = 1, pageSize: number = 20) => {
   return useQuery({
     queryKey: ['mansions', filter, mapBounds, page, pageSize],
     queryFn: () => fetchMansions(filter, mapBounds, page, pageSize),
+    staleTime: 1000 * 60 * 5, // 5분
+  });
+};
+
+// 무한 스크롤용 맨션 목록 조회 훅
+export const useInfiniteMansions = (pageSize: number = 20) => {
+  const { filter } = useSearchStore();
+
+  return useInfiniteQuery({
+    queryKey: ['mansions-infinite', filter, pageSize],
+    queryFn: ({ pageParam = 1 }) => fetchMansions(filter, null, pageParam, pageSize),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      if (lastPage.hasMore) {
+        return allPages.length + 1;
+      }
+      return undefined;
+    },
     staleTime: 1000 * 60 * 5, // 5분
   });
 };
